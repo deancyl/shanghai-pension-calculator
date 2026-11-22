@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>上海退休金预期计算器（1990–2026全制度版）</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+    input[type="range"] {
+      accent-color: #2563eb;
+    }
+    .tab-active {
+      background-color: #1e3a8a;
+      color: #ffffff;
+    }
+    .tab-inactive {
+      background-color: #ffffff;
+      color: #475569;
+    }
+    .tab-inactive:hover {
+      background-color: #f1f5f9;
+    }
+    .scheme-active {
+      border-color: #2563eb;
+      background-color: #eff6ff;
+      color: #1e3a8a;
+    }
+    .scheme-inactive {
+      border-color: #e2e8f0;
+      background-color: #ffffff;
+      color: #475569;
+    }
+    .scheme-inactive:hover {
+      border-color: #cbd5e1;
+      background-color: #f8fafc;
+    }
+  </style>
+</head>
+<body class="min-h-screen antialiased">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <!-- Header -->
+    <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-6 border-b border-slate-200">
+      <div>
+        <div class="flex items-center gap-2.5">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+            1990–2026 上海全制度适配
+          </span>
+          <span class="text-xs text-slate-500">含2025延迟退休新规 &amp; 2026年8月最新计发基数 12,577元/月</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 mt-1.5 tracking-tight">
+          上海退休金预期计算器
+        </h1>
+        <p class="text-sm text-slate-600 mt-1">
+          把复杂的社保文件翻译成大白话：自动识别视同工龄、虚账实记、指数托底与弹性退休，算出你退休每月能领多少钱。
+        </p>
+      </div>
+
+      <!-- Top Navigation Tabs -->
+      <div class="inline-flex rounded-xl p-1 bg-slate-200/70 border border-slate-200 self-start">
+        <button id="tabBtnCalc" type="button" class="px-4 py-2 text-sm font-medium rounded-lg transition tab-active">
+          养老金测算
+        </button>
+        <button id="tabBtnPolicy" type="button" class="px-4 py-2 text-sm font-medium rounded-lg transition tab-inactive">
+          1990–2026 制度与社平工资库
+        </button>
+      </div>
+    </header>
+
+    <!-- View 1: Calculator -->
+    <main id="viewCalc" class="mt-6 space-y-6">
+      <!-- Quick Presets -->
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider mr-1">常见人群一键代入：</span>
+        <button type="button" data-preset="zhongren90" class="preset-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-white border border-slate-200 text-slate-700 hover:border-blue-400 hover:text-blue-700 transition">
+          1968年生·90年代初入职（含过渡期）
+        </button>
+        <button type="button" data-preset="post80" class="preset-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-white border border-slate-200 text-slate-700 hover:border-blue-400 hover:text-blue-700 transition">
+          1985年生·80后企业白领
+        </button>
+        <button type="button" data-preset="post95" class="preset-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-white border border-slate-200 text-slate-700 hover:border-blue-400 hover:text-blue-700 transition">
+          1998年生·Z世代新人
+        </button>
+        <button type="button" data-preset="gov" class="preset-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-white border border-slate-200 text-slate-700 hover:border-blue-400 hover:text-blue-700 transition">
+          机关事业单位（2014年前入职）
+        </button>
+        <button type="button" data-preset="resident" class="preset-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-white border border-slate-200 text-slate-700 hover:border-blue-400 hover:text-blue-700 transition">
+          上海城乡居民养老保险
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <!-- Left Column: Inputs -->
+        <section class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 space-y-5">
+          <!-- 1. Scheme -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-800 mb-2">1. 您的参保身份</label>
+            <div class="grid grid-cols-3 gap-2">
+              <button type="button" data-scheme="enterprise" class="scheme-btn py-2.5 px-2 rounded-xl border text-xs sm:text-sm font-medium transition scheme-active">
+                企业职工<br><span class="text-[11px] font-normal opacity-80">含灵活就业</span>
+              </button>
+              <button type="button" data-scheme="government" class="scheme-btn py-2.5 px-2 rounded-xl border text-xs sm:text-sm font-medium transition scheme-inactive">
+                机关事业<br><span class="text-[11px] font-normal opacity-80">含职业年金</span>
+              </button>
+              <button type="button" data-scheme="resident" class="scheme-btn py-2.5 px-2 rounded-xl border text-xs sm:text-sm font-medium transition scheme-inactive">
+                城乡居民<br><span class="text-[11px] font-normal opacity-80">基础1555元</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 2. Birth Year & Role (Minimal) -->
+          <div class="pt-3 border-t border-slate-100 space-y-3">
+            <label class="block text-sm font-semibold text-slate-800">2. 出生年份与退休类别</label>
+            <div class="grid grid-cols-12 gap-3">
+              <div class="col-span-5">
+                <label for="birthYear" class="block text-xs text-slate-500 mb-1">出生年份</label>
+                <input id="birthYear" type="number" min="1940" max="2008" value="1985" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div id="roleWrap" class="col-span-7">
+                <label for="genderRole" class="block text-xs text-slate-500 mb-1">性别与岗位</label>
+                <select id="genderRole" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="male">男职工（延至63岁）</option>
+                  <option value="female55">女干部/灵活就业（延至58岁）</option>
+                  <option value="female50">女工人/普通岗（延至55岁）</option>
+                </select>
+              </div>
+            </div>
+            <p id="autoWorkNote" class="text-[11px] text-slate-500 bg-slate-50 px-2.5 py-1.5 rounded-lg">
+              已按常规22岁起工作自动推算工龄与退休时间，可在下方「精细微调」修改
+            </p>
+          </div>
+
+          <!-- 3. Unambiguous Contribution Base Input (Enterprise / Gov) -->
+          <div id="workerInputs" class="pt-3 border-t border-slate-100 space-y-3.5">
+            <div>
+              <div class="flex items-center justify-between">
+                <label for="currentSalary" class="text-sm font-semibold text-slate-800">3. 你的月社保缴费基数（元/月）</label>
+                <span id="indexBadge" class="text-[11px] font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded">相当于社平 1.19 倍</span>
+              </div>
+              <p class="text-[11px] text-slate-500 mt-0.5">
+                算养老金<strong>严格以「随申办」里的缴费基数为准</strong>（不是工资条的实发或应发工资）
+              </p>
+            </div>
+
+            <div class="space-y-2">
+              <input id="currentSalary" type="number" min="1000" max="100000" step="500" value="15000" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-base font-medium focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <div class="flex flex-wrap items-center gap-1.5">
+                <span class="text-[11px] text-slate-400">快速填入：</span>
+                <button type="button" data-tier="min" class="tier-btn px-2.5 py-1 rounded-lg border text-[11px] font-medium transition scheme-inactive">
+                  最低 7,546
+                </button>
+                <button type="button" data-tier="avg" class="tier-btn px-2.5 py-1 rounded-lg border text-[11px] font-medium transition scheme-inactive">
+                  社平 12,577
+                </button>
+                <button type="button" data-tier="max" class="tier-btn px-2.5 py-1 rounded-lg border text-[11px] font-medium transition scheme-inactive">
+                  顶格 37,731
+                </button>
+              </div>
+              <p id="tierCapNote" class="text-[11px] text-slate-500">
+                手头没查到时：若公司足额交社保，可先填去年税前总收入÷12 估算；按最低交的直接点「最低 7,546」
+              </p>
+            </div>
+
+            <!-- How to check on Suishenban (accurate & concise) -->
+            <div class="rounded-xl border border-blue-100 bg-blue-50/50 px-3 py-2">
+              <button id="toggleGuideBtn" type="button" class="w-full flex items-center justify-between text-xs font-medium text-blue-800">
+                <span>怎么查自己的真实缴费基数？（随申办 30 秒教程）</span>
+                <span id="guideArrow" class="text-[11px]">展开 ▾</span>
+              </button>
+              <div id="guideBox" class="hidden mt-2 pt-2 border-t border-blue-100 text-[11px] text-slate-600 space-y-1.5 leading-relaxed">
+                <div><strong>第 1 步：</strong>打开微信/支付宝搜<strong>「随申办」</strong>小程序 → 首页搜<strong>「三金账单」</strong>或<strong>「养老保险缴费情况」</strong>。</div>
+                <div><strong>第 2 步：</strong>只看这 3 个数：
+                  <br>• <strong>缴费基数</strong> → 直接填进上面的输入框（最准，不要用工资条应发合计替代）；
+                  <br>• <strong>累计缴费月数</strong> → 若中途有断缴，把漏交年数填进第 4 步「中途断缴」，退休累计年数会自动生成；
+                  <br>• <strong>个人账户储存额</strong> → 填进下方第 4 步「当前个账余额」。
+                </div>
+              </div>
+            </div>
+
+            <!-- Simple 5-way historical level selector -->
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1.5">过去这些年的缴费基数，和现在比怎么样？</label>
+              <div class="grid grid-cols-3 gap-1.5">
+                <button type="button" data-hist="alwaysMin" class="hist-btn py-1.5 px-2 rounded-lg border text-xs transition scheme-inactive">一直最低交</button>
+                <button type="button" data-hist="low" class="hist-btn py-1.5 px-2 rounded-lg border text-xs transition scheme-inactive">以前交得更低</button>
+                <button type="button" data-hist="same" class="hist-btn py-1.5 px-2 rounded-lg border text-xs transition scheme-active">一直差不多</button>
+              </div>
+              <div class="grid grid-cols-2 gap-1.5 mt-1.5">
+                <button type="button" data-hist="high" class="hist-btn py-1.5 px-2 rounded-lg border text-xs transition scheme-inactive">以前交得更高</button>
+                <button type="button" data-hist="alwaysMax" class="hist-btn py-1.5 px-2 rounded-lg border text-xs transition scheme-inactive">一直顶格交 (3倍)</button>
+              </div>
+            </div>
+
+            <!-- Policy Auto-Detection Banner (plain language) -->
+            <div id="policyTags" class="flex flex-wrap gap-1.5 text-[11px]"></div>
+          </div>
+
+          <!-- 3b. Resident Inputs -->
+          <div id="residentInputs" class="hidden pt-3 border-t border-slate-100 space-y-3.5">
+            <div class="flex items-center justify-between">
+              <label class="text-sm font-semibold text-slate-800">3. 城乡居民养老缴费</label>
+              <div class="inline-flex rounded-lg p-0.5 bg-slate-100 border border-slate-200 text-xs">
+                <button id="resUnitYearBtn" type="button" class="px-2.5 py-1 rounded-md font-medium bg-white text-blue-700 shadow-sm transition">按年</button>
+                <button id="resUnitMonthBtn" type="button" class="px-2.5 py-1 rounded-md font-medium text-slate-600 hover:text-slate-900 transition">按月</button>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label for="resYears" class="block text-xs text-slate-500 mb-1">累计缴费年限（年）</label>
+                <input id="resYears" type="number" min="15" max="45" value="15" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+              </div>
+              <div>
+                <label id="resPayLabel" for="resAnnualPay" class="block text-xs text-slate-500 mb-1">年均个人缴费+补贴（元）</label>
+                <input id="resAnnualPay" type="number" min="50" max="20000" step="100" value="3000" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+              </div>
+            </div>
+            <p class="text-xs text-slate-500 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+              上海城乡居保基础养老金标准目前为 <strong>1,555元/月</strong>（2025–2026标准），60周岁起按月领取，个人账户除以139计发。
+            </p>
+          </div>
+
+          <!-- 4. Collapsible Fine-Tuning with Clear Purpose -->
+          <div class="pt-3 border-t border-slate-100 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <div>
+                <label class="text-sm font-semibold text-slate-800">4. 想算得更准？（选填，不改也能算）</label>
+                <p class="text-[11px] text-slate-500 mt-0.5">有断缴/外地转入、查到了个账余额、或想测提前/延迟退休再点开</p>
+              </div>
+              <button id="toggleAdvancedBtn" type="button" class="shrink-0 ml-2 text-xs text-blue-600 hover:text-blue-800 font-medium">
+                展开微调 ▾
+              </button>
+            </div>
+            <div id="advancedBox" class="hidden space-y-3.5 bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-[11px] font-semibold text-slate-700">① 修正工龄（自动计算退休时累计年数）</span>
+                  <span id="autoContribBadge" class="text-[11px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded">预计累计 41.0 年</span>
+                </div>
+                <div class="grid grid-cols-3 gap-2.5">
+                  <div>
+                    <label for="birthMonth" class="block text-[11px] text-slate-500 mb-1">出生月份</label>
+                    <select id="birthMonth" class="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm bg-white">
+                      <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
+                      <option value="4">4月</option><option value="5">5月</option><option value="6" selected>6月</option>
+                      <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
+                      <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label for="startWorkYear" class="block text-[11px] text-slate-500 mb-1">首次参保年份</label>
+                    <input id="startWorkYear" type="number" min="1975" max="2026" value="2007" class="w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm bg-white" />
+                  </div>
+                  <div>
+                    <label for="gapYears" class="block text-[11px] text-slate-500 mb-1">中途断缴(年)</label>
+                    <input id="gapYears" type="number" min="0" max="30" step="0.5" value="0" class="w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm bg-white" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Elastic retirement slider -->
+              <div id="elasticWrap" class="pt-2 border-t border-slate-200/70">
+                <div class="flex items-center justify-between text-xs mb-1">
+                  <span class="font-semibold text-slate-700">② 测算提前或延迟退休（最多±3年）</span>
+                  <span id="elasticLabel" class="font-semibold text-blue-700">按法定年龄正常退休</span>
+                </div>
+                <input id="elasticMonths" type="range" min="-36" max="36" step="1" value="0" class="w-full" />
+                <div class="flex justify-between text-[11px] text-slate-400">
+                  <span>提前3年领</span>
+                  <span>法定退休</span>
+                  <span>延迟3年领</span>
+                </div>
+              </div>
+
+              <div class="pt-2 border-t border-slate-200/70">
+                <div class="text-[11px] font-semibold text-slate-700 mb-1.5">③ 填入随申办真实记录（可让结果误差缩至几百元内）</div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label for="customBalance" class="block text-[11px] text-slate-500 mb-1">当前个账储存额（元）</label>
+                    <input id="customBalance" type="number" min="0" step="1000" placeholder="留空自动估算" class="w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm bg-white" />
+                  </div>
+                  <div>
+                    <label for="histAvgInput" class="block text-[11px] text-slate-500 mb-1">历史月均缴费基数（元）</label>
+                    <input id="histAvgInput" type="number" min="0" step="100" placeholder="留空自动估算" class="w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm bg-white" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="pt-2 border-t border-slate-200/70 space-y-2">
+                <div class="text-[11px] font-semibold text-slate-700">④ 未来经济预期与补充养老（默认已按稳健值设定）</div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label for="wageGrowth" class="block text-[11px] text-slate-500 mb-1">未来社平年增速 (%)</label>
+                    <input id="wageGrowth" type="number" min="0" max="8" step="0.5" value="2.5" class="w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm bg-white" />
+                  </div>
+                  <div>
+                    <label for="acctRate" class="block text-[11px] text-slate-500 mb-1">个账年记账利率 (%)</label>
+                    <input id="acctRate" type="number" min="1" max="8" step="0.5" value="2.5" class="w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm bg-white" />
+                  </div>
+                </div>
+                <div class="flex items-center justify-between pt-1">
+                  <label for="enablePersonalPension" class="text-xs text-slate-700 font-medium">叠加个人养老金（1.2万/年税优）</label>
+                  <input id="enablePersonalPension" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Right Column: Results Dashboard -->
+        <section class="lg:col-span-7 space-y-5">
+          <!-- Hero Result Card -->
+          <div class="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white rounded-2xl p-6 shadow-md">
+            <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+              <div>
+                <p class="text-xs font-medium text-blue-200 uppercase tracking-wider">预计退休首月到手养老金</p>
+                <div class="flex items-baseline gap-2 mt-1">
+                  <span id="totalMonthly" class="text-4xl sm:text-5xl font-bold tracking-tight">--</span>
+                  <span class="text-base text-blue-200 font-medium">元 / 月</span>
+                </div>
+                <p id="presentValueNote" class="text-xs text-slate-300 mt-2">
+                  按年均2.0%通胀折算，相当于今天的购买力约 <strong class="text-white">-- 元/月</strong>
+                </p>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3 sm:text-right">
+                <div class="bg-white/10 rounded-xl px-3.5 py-2.5 backdrop-blur-sm">
+                  <div class="text-[11px] text-blue-200">实际退休时间</div>
+                  <div id="retireDateText" class="text-sm font-semibold mt-0.5">--</div>
+                  <div id="retireAgeText" class="text-[11px] text-slate-300">--</div>
+                </div>
+                <div class="bg-white/10 rounded-xl px-3.5 py-2.5 backdrop-blur-sm">
+                  <div class="text-[11px] text-blue-200">养老金替代率</div>
+                  <div id="replacementRate" class="text-sm font-semibold mt-0.5">--%</div>
+                  <div id="minYearsStatus" class="text-[11px] text-emerald-300">--</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Warning banner if years < minYears -->
+            <div id="minYearsWarning" class="hidden mt-4 bg-amber-500/20 border border-amber-400/40 rounded-xl px-3.5 py-2.5 text-xs text-amber-100"></div>
+          </div>
+
+          <!-- Breakdown Cards + Donut Chart -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+              <h2 class="text-sm font-semibold text-slate-800 mb-3">养老金构成拆解</h2>
+              <div class="relative h-56">
+                <canvas id="breakdownChart"></canvas>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col justify-between">
+              <h2 class="text-sm font-semibold text-slate-800 mb-3">分项金额与大白话算法</h2>
+              <div id="breakdownList" class="space-y-3 text-sm"></div>
+              <div class="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-500 flex justify-between">
+                <span>退休当年预估计发基数</span>
+                <span id="futureBaseDisplay" class="font-semibold text-slate-700">-- 元/月</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Elastic Retirement Comparison Chart + Break-even Analysis -->
+          <div id="elasticChartCard" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <h2 class="text-sm font-semibold text-slate-800">早退 vs 正常退 vs 晚退：到底哪个更划算？</h2>
+                <p id="elasticInsight" class="text-xs text-blue-700 font-medium mt-0.5">--</p>
+              </div>
+            </div>
+            <div class="relative h-56">
+              <canvas id="elasticChart"></canvas>
+            </div>
+            <div id="elasticSummaryGrid" class="grid grid-cols-3 gap-2.5 pt-2 border-t border-slate-100 text-xs"></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Full-Width Detailed Analysis Report -->
+      <section class="pt-2 space-y-5">
+        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900">深度分析报告：这笔钱到底够不够花？处于什么水平？</h2>
+            <p class="text-xs text-slate-500 mt-0.5">以下消费力与区域百分位均按「今日购买力（扣除年均2%通胀）」折算，让你直观感受未来退休生活</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <!-- Card A: Future Purchasing Power & Lifestyle Portrait -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 space-y-4">
+            <div class="flex items-center justify-between gap-2">
+              <h3 class="text-sm font-bold text-slate-900">1. 未来在上海的真实消费能力</h3>
+              <span id="lifestyleBadge" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">--</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div class="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                <div class="text-[11px] text-slate-500">覆盖上海人均月消费 (4,756元)</div>
+                <div id="consumeCoverRatio" class="text-xl font-bold text-slate-900 mt-0.5">--%</div>
+                <div class="text-[11px] text-slate-400 mt-0.5">依据上海市统计局2025年数据</div>
+              </div>
+              <div class="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                <div class="text-[11px] text-slate-500">对比上海人均可支配收入 (8,070元)</div>
+                <div id="incomeCoverRatio" class="text-xl font-bold text-slate-900 mt-0.5">--%</div>
+                <div class="text-[11px] text-slate-400 mt-0.5">城镇常住居民月均水平</div>
+              </div>
+            </div>
+
+            <div>
+              <div class="text-xs font-semibold text-slate-700 mb-2">按今日物价折算，退休后每月大概能支撑的生活：</div>
+              <div id="lifestyleChecklist" class="space-y-1.5 text-xs text-slate-600"></div>
+            </div>
+          </div>
+
+          <!-- Card B: Regional Percentile Positioning -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 space-y-4">
+            <div class="flex items-center justify-between gap-2">
+              <h3 class="text-sm font-bold text-slate-900">2. 上海 / 江浙沪 / 全国 百分位水平</h3>
+              <span class="text-[11px] text-slate-400">按今日购买力横向对比</span>
+            </div>
+
+            <div id="percentileBars" class="space-y-4"></div>
+
+            <p class="text-[11px] text-slate-400 leading-relaxed pt-2 border-t border-slate-100">
+              参考基准（估算）：上海城镇退休月均约 5,500 元，江浙沪城镇退休月均约 4,300 元，全国企业退休月均约 3,320 元（国家统计局2023年3,162元经2024–2025两轮上调推算）。
+            </p>
+          </div>
+
+          <!-- Card C: Personal Contribution Payback & Longevity Payout -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 space-y-4">
+            <div class="flex items-center justify-between gap-2">
+              <h3 class="text-sm font-bold text-slate-900">3. 个人缴费回本账 &amp; 长寿红利</h3>
+              <span id="paybackBadge" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">--</span>
+            </div>
+
+            <p id="paybackSummary" class="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100">--</p>
+
+            <div>
+              <div class="text-xs font-semibold text-slate-700 mb-2">不同年龄累计可领总额（已折算今日购买力，括号内为未来名义金额）</div>
+              <div id="longevityGrid" class="grid grid-cols-4 gap-2 text-center"></div>
+            </div>
+          </div>
+
+          <!-- Card D: Gap Diagnosis & Actionable Advice -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 space-y-4">
+            <div class="flex items-center justify-between gap-2">
+              <h3 class="text-sm font-bold text-slate-900">4. 养老缺口诊断与实操建议</h3>
+              <span id="gapBadge" class="text-xs font-semibold px-2.5 py-1 rounded-full">--</span>
+            </div>
+
+            <div id="gapDiagnosisBox" class="text-xs text-slate-700 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100">--</div>
+
+            <div id="adviceList" class="space-y-2 text-xs text-slate-600"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- View 2: Policy Timeline & Wage Table -->
+    <section id="viewPolicy" class="hidden mt-6 space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Timeline -->
+        <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+          <h2 class="text-lg font-bold text-slate-900 mb-1">1990–2026 上海退休金管理制度演进</h2>
+          <p class="text-xs text-slate-500 mb-5">本计算器已将以下全部历史节点规则内置到算法中</p>
+
+          <div class="space-y-5 relative before:absolute before:inset-0 before:ml-3.5 before:-translate-x-px before:h-full before:w-0.5 before:bg-slate-200">
+            <div class="relative pl-9">
+              <span class="absolute left-1.5 top-1.5 w-4 h-4 rounded-full bg-slate-400 border-2 border-white"></span>
+              <div class="text-xs font-semibold text-slate-500">1990–1992年 · 传统退休制度</div>
+              <h3 class="text-sm font-bold text-slate-800 mt-0.5">无个人账户，工龄即“视同缴费年限”</h3>
+              <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+                1992年底前参加工作的连续工龄，全部认定为<strong>视同缴费年限</strong>，视同缴费工资指数统一按 <strong>1.0</strong> 计算，并在退休时按每年 <strong>1.2%</strong> 计发过渡性养老金。
+              </p>
+            </div>
+
+            <div class="relative pl-9">
+              <span class="absolute left-1.5 top-1.5 w-4 h-4 rounded-full bg-blue-500 border-2 border-white"></span>
+              <div class="text-xs font-semibold text-blue-600">1993年1月 · 上海“93办法”改革</div>
+              <h3 class="text-sm font-bold text-slate-800 mt-0.5">建立个人养老账户与“虚账实记”</h3>
+              <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+                上海率先建立个人账户制度。针对1992年底前已工作人群，将1993–1997年5年期间对应的历史权益转换为“虚账实记”金额（退休时除以120作为过渡性养老金一部分）。
+              </p>
+            </div>
+
+            <div class="relative pl-9">
+              <span class="absolute left-1.5 top-1.5 w-4 h-4 rounded-full bg-blue-600 border-2 border-white"></span>
+              <div class="text-xs font-semibold text-blue-600">2007年 · 沪府发〔2007〕27号“新办法”</div>
+              <h3 class="text-sm font-bold text-slate-800 mt-0.5">基础养老金与个人缴费年限、指数挂钩</h3>
+              <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+                确立“多缴多得、长缴多得”公式：基础养老金 = (上年度社平 + 指数化工资) ÷ 2 × 缴费年限 × 1%；个人账户储存额 ÷ 国家统一计发月数（60岁139个月）。
+              </p>
+            </div>
+
+            <div class="relative pl-9">
+              <span class="absolute left-1.5 top-1.5 w-4 h-4 rounded-full bg-indigo-600 border-2 border-white"></span>
+              <div class="text-xs font-semibold text-indigo-600">2011年7月 · 《社会保险法》实施与并轨</div>
+              <h3 class="text-sm font-bold text-slate-800 mt-0.5">外省市职工纳入城保 &amp; 1993–2010指数1.0托底</h3>
+              <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+                综合保险、小城镇保险逐步并入城镇职工养老保险。上海明确规定：<strong>1993年至2010年的缴费工资指数低于1.0的，按1.0计算</strong>；2011–2013年也设有逐步过渡托底保护。
+              </p>
+            </div>
+
+            <div class="relative pl-9">
+              <span class="absolute left-1.5 top-1.5 w-4 h-4 rounded-full bg-purple-600 border-2 border-white"></span>
+              <div class="text-xs font-semibold text-purple-600">2014年10月 · 机关事业单位养老改革</div>
+              <h3 class="text-sm font-bold text-slate-800 mt-0.5">告别退休双轨制，建立职业年金</h3>
+              <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+                2014年10月1日起机关事业单位工作人员开始个人缴费（8%）并建立职业年金（单位8%+个人4%）；2014年9月底前工龄作为视同缴费年限，十年过渡期（至2024年9月）已结束。
+              </p>
+            </div>
+
+            <div class="relative pl-9">
+              <span class="absolute left-1.5 top-1.5 w-4 h-4 rounded-full bg-teal-600 border-2 border-white"></span>
+              <div class="text-xs font-semibold text-teal-600">2019–2025年 · 城乡居保 &amp; 个人养老金</div>
+              <h3 class="text-sm font-bold text-slate-800 mt-0.5">居保基础养老金连年上调至1,555元/月</h3>
+              <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+                2019年修订《上海市城乡居民基本养老保险办法》，2025年（沪人社规〔2025〕12号）起基础养老金标准提至1,555元/月。同时上海作为首批试点推行个人养老金（每年最高12,000元税优）。
+              </p>
+            </div>
+
+            <div class="relative pl-9">
+              <span class="absolute left-1.5 top-1.5 w-4 h-4 rounded-full bg-emerald-600 border-2 border-white"></span>
+              <div class="text-xs font-semibold text-emerald-600">2025–2026年 · 延迟退休与最新计发办法</div>
+              <h3 class="text-sm font-bold text-slate-800 mt-0.5">渐进延迟退休 + 沪人社规〔2026〕16号</h3>
+              <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+                2025年1月起男延至63岁、女干部至58岁、女工人至55岁，支持±3年弹性退休；2030年起最低缴费年限逐步由15年延至20年。2026年8月起实施沪人社规〔2026〕16号，2026年计发基数为 <strong>12,577元/月</strong>，缴费基数下限7,546元、上限37,731元。
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Historical Wage Table -->
+        <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+          <h2 class="text-lg font-bold text-slate-900 mb-1">1990–2025 上海历年社平工资</h2>
+          <p class="text-xs text-slate-500 mb-4">2018年起切换为全口径城镇单位就业人员月平均工资（元/月）</p>
+          <div class="max-h-[540px] overflow-y-auto border border-slate-200 rounded-xl">
+            <table class="w-full text-xs text-left">
+              <thead class="bg-slate-50 text-slate-600 sticky top-0 border-b border-slate-200">
+                <tr>
+                  <th class="py-2.5 px-3 font-semibold">年份</th>
+                  <th class="py-2.5 px-3 font-semibold text-right">月平均工资</th>
+                  <th class="py-2.5 px-3 font-semibold text-right">口径说明</th>
+                </tr>
+              </thead>
+              <tbody id="wageTableBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+
+    // 0. Remote Policy Auto-Update (fetches policy_config.json on startup & caches in localStorage)
+    const REMOTE_POLICY_URL = window.SHANGHAI_POLICY_URL || "https://raw.githubusercontent.com/deancyl/shanghai-pension-calculator/main/remote-policy/policy_config.json";
+    let ACTIVE_BASE_YEAR = 2026;
+    let ACTIVE_BASE_WAGE = 12577;
+    let ACTIVE_MIN_BASE = 7546;
+    let ACTIVE_MAX_BASE = 37731;
+    let ACTIVE_RESIDENT_BASIC = 1555;
+
+    function applyPolicyConfig(cfg) {
+      if (!cfg || typeof cfg !== 'object') return;
+      if (cfg.baseYear) ACTIVE_BASE_YEAR = cfg.baseYear;
+      if (cfg.pensionBase) ACTIVE_BASE_WAGE = cfg.pensionBase;
+      if (cfg.minBase) ACTIVE_MIN_BASE = cfg.minBase;
+      if (cfg.maxBase) ACTIVE_MAX_BASE = cfg.maxBase;
+      if (cfg.residentBasic) ACTIVE_RESIDENT_BASIC = cfg.residentBasic;
+      if (Array.isArray(cfg.extraWages)) {
+        cfg.extraWages.forEach(item => {
+          if (item.year && item.monthly && !WAGE_BY_YEAR[item.year]) {
+            SHANGHAI_WAGES.unshift(item);
+            WAGE_BY_YEAR[item.year] = item.monthly;
+          }
+        });
+        renderWageTable();
+      }
+      render();
+    }
+
+    async function syncLatestPolicy() {
+      try {
+        const cached = localStorage.getItem('sh_pension_policy_cache');
+        if (cached) applyPolicyConfig(JSON.parse(cached));
+      } catch (e) {}
+      if (!REMOTE_POLICY_URL || REMOTE_POLICY_URL.includes('YOUR_GITHUB_OR_CDN_DOMAIN')) return;
+      try {
+        const resp = await fetch(REMOTE_POLICY_URL + '?t=' + Date.now(), { cache: 'no-store' });
+        if (!resp.ok) return;
+        const cfg = await resp.json();
+        try { localStorage.setItem('sh_pension_policy_cache', JSON.stringify(cfg)); } catch (e) {}
+        applyPolicyConfig(cfg);
+      } catch (e) {}
+    }
+
+    // 1. Verified Shanghai Historical Monthly Average Wages (1990-2025, RMB/month)
+    const SHANGHAI_WAGES = [
+      { year: 2025, monthly: 12577, note: '全口径社平 (2026计发基数)' },
+      { year: 2024, monthly: 12434, note: '全口径社平 (2025计发基数)' },
+      { year: 2023, monthly: 12307, note: '全口径社平' },
+      { year: 2022, monthly: 12183, note: '全口径社平' },
+      { year: 2021, monthly: 11396, note: '全口径社平' },
+      { year: 2020, monthly: 10338, note: '全口径社平' },
+      { year: 2019, monthly: 9580,  note: '全口径社平' },
+      { year: 2018, monthly: 7832,  note: '全口径 (原在岗8765)' },
+      { year: 2017, monthly: 7132,  note: '职工月平均工资' },
+      { year: 2016, monthly: 6504,  note: '职工月平均工资' },
+      { year: 2015, monthly: 5939,  note: '职工月平均工资' },
+      { year: 2014, monthly: 5451,  note: '职工月平均工资' },
+      { year: 2013, monthly: 5036,  note: '职工月平均工资' },
+      { year: 2012, monthly: 4692,  note: '职工月平均工资' },
+      { year: 2011, monthly: 4331,  note: '职工月平均工资' },
+      { year: 2010, monthly: 3896,  note: '职工月平均工资' },
+      { year: 2009, monthly: 3566,  note: '职工月平均工资' },
+      { year: 2008, monthly: 3292,  note: '职工月平均工资' },
+      { year: 2007, monthly: 2892,  note: '职工月平均工资' },
+      { year: 2006, monthly: 2464,  note: '职工月平均工资' },
+      { year: 2005, monthly: 2235,  note: '职工月平均工资' },
+      { year: 2004, monthly: 2033,  note: '职工月平均工资' },
+      { year: 2003, monthly: 1847,  note: '职工月平均工资' },
+      { year: 2002, monthly: 1623,  note: '职工月平均工资' },
+      { year: 2001, monthly: 1480,  note: '职工月平均工资' },
+      { year: 2000, monthly: 1285,  note: '职工月平均工资' },
+      { year: 1999, monthly: 1179,  note: '职工月平均工资' },
+      { year: 1998, monthly: 1005,  note: '职工月平均工资' },
+      { year: 1997, monthly: 952,   note: '职工月平均工资' },
+      { year: 1996, monthly: 889,   note: '职工月平均工资' },
+      { year: 1995, monthly: 773,   note: '职工月平均工资' },
+      { year: 1994, monthly: 617,   note: '职工月平均工资' },
+      { year: 1993, monthly: 471,   note: '93改革起点' },
+      { year: 1992, monthly: 324,   note: '年均3885折算' },
+      { year: 1991, monthly: 255,   note: '年均3054折算' },
+      { year: 1990, monthly: 229,   note: '年均2744折算' }
+    ];
+
+    const WAGE_BY_YEAR = {};
+    SHANGHAI_WAGES.forEach(item => { WAGE_BY_YEAR[item.year] = item.monthly; });
+
+    // Personal account divisor table (age -> months)
+    const DIVISOR_TABLE = {
+      40: 233, 41: 230, 42: 226, 43: 223, 44: 220, 45: 216, 46: 212, 47: 208, 48: 204, 49: 199,
+      50: 195, 51: 190, 52: 185, 53: 180, 54: 175, 55: 170, 56: 164, 57: 158, 58: 152, 59: 145,
+      60: 139, 61: 132, 62: 125, 63: 117, 64: 109, 65: 101, 66: 93,  67: 84,  68: 75,  69: 65,
+      70: 56
+    };
+
+    function getDivisor(ageYears) {
+      const a = Math.min(70, Math.max(40, Math.round(ageYears)));
+      return DIVISOR_TABLE[a] || 139;
+    }
+
+    // State
+    const state = {
+      scheme: 'enterprise', // 'enterprise' | 'government' | 'resident'
+      birthYear: 1985,
+      birthMonth: 6,
+      genderRole: 'male',
+      elasticMonths: 0,
+      startWorkYear: 2007,
+      gapYears: 0,
+      autoStartWork: true,
+      unitMode: 'month', // 'month' | 'year'
+      tier: 'actual', // 'min' | 'avg' | 'actual' | 'max'
+      histMode: 'same', // 'low' | 'same' | 'high'
+      currentSalary: 15000, // always stored as monthly RMB
+      histAvgMonthly: null, // optional historical monthly average RMB
+      customBalance: null,
+      resUnitMode: 'year', // 'year' | 'month'
+      resYears: 15,
+      resAnnualPay: 3000,
+      wageGrowth: 2.5,
+      acctRate: 2.5,
+      enablePersonalPension: false
+    };
+
+    let breakdownChart = null;
+    let elasticChart = null;
+
+    // 2. Statutory Retirement Age under 2025 Gradual Delay Policy
+    function calcStatutoryRetire(birthYear, birthMonth, role) {
+      let baseAge = 60, maxDelay = 36, stepMonths = 4, startCohortYear = 1965;
+      if (role === 'female55') {
+        baseAge = 55; maxDelay = 36; stepMonths = 4; startCohortYear = 1970;
+      } else if (role === 'female50') {
+        baseAge = 50; maxDelay = 60; stepMonths = 2; startCohortYear = 1975;
+      }
+
+      const origRetireTotalMonths = (birthYear + baseAge) * 12 + (birthMonth - 1);
+      const reformStartMonths = 2025 * 12 + 0; // Jan 2025
+
+      let delayMonths = 0;
+      if (origRetireTotalMonths >= reformStartMonths) {
+        const diffFromReform = origRetireTotalMonths - reformStartMonths;
+        delayMonths = Math.min(maxDelay, Math.floor(diffFromReform / stepMonths) + 1);
+      }
+
+      const statutoryTotalMonths = origRetireTotalMonths + delayMonths;
+      return {
+        baseAge,
+        delayMonths,
+        statutoryTotalMonths,
+        statutoryAgeYears: baseAge + delayMonths / 12,
+        statutoryYear: Math.floor(statutoryTotalMonths / 12),
+        statutoryMonth: (statutoryTotalMonths % 12) + 1
+      };
+    }
+
+    // Minimum Contribution Years (2025-2029: 15y; 2030+: +6m/yr up to 20y)
+    function getMinContribYears(retireYear) {
+      if (retireYear <= 2029) return 15;
+      if (retireYear >= 2039) return 20;
+      return 15 + (retireYear - 2029) * 0.5;
+    }
+
+    // Core Pension Calculation
+    function calculatePension(customElasticOverride) {
+      const elastic = customElasticOverride !== undefined ? customElasticOverride : state.elasticMonths;
+
+      if (state.scheme === 'resident') {
+        const retireTotalMonths = (state.birthYear + 60) * 12 + (state.birthMonth - 1);
+        const retireYear = Math.floor(retireTotalMonths / 12);
+        const retireMonth = (retireTotalMonths % 12) + 1;
+        const years = Math.max(15, state.resYears);
+        const r = state.acctRate / 100;
+        let balance = 0;
+        for (let i = 0; i < years; i++) {
+          balance = (balance + state.resAnnualPay) * (1 + r);
+        }
+        const basic = 1555 + Math.max(0, years - 15) * 20;
+        const personal = balance / 139;
+        const supp = state.enablePersonalPension ? (12000 * Math.max(1, retireYear - 2022) / 139) : 0;
+        const total = basic + personal + supp;
+        const yearsAhead = Math.max(0, retireYear - 2026);
+        const pv = total / Math.pow(1.02, yearsAhead);
+
+        return {
+          total, pv, basic, personal, transitional: 0, supp,
+          retireYear, retireMonth,
+          retireAgeYears: 60,
+          minYears: 15,
+          actualYears: years,
+          futureBase: 1555,
+          replacementRate: null,
+          deemedYears: 0,
+          has1993Floor: false,
+          accountBalance: balance
+        };
+      }
+
+      // Enterprise or Government
+      const stat = calcStatutoryRetire(state.birthYear, state.birthMonth, state.genderRole);
+      const minAllowedMonths = (state.birthYear + stat.baseAge) * 12 + (state.birthMonth - 1);
+      const targetMonths = Math.max(minAllowedMonths, stat.statutoryTotalMonths + elastic);
+      const retireYear = Math.floor(targetMonths / 12);
+      const retireMonth = (targetMonths % 12) + 1;
+      const retireAgeYears = (targetMonths - (state.birthYear * 12 + state.birthMonth - 1)) / 12;
+
+      const minYears = getMinContribYears(stat.statutoryYear);
+      // Always auto-calculate total contribution years from startWorkYear to actual retire date minus gapYears
+      const rawSpanYears = (targetMonths - (state.startWorkYear * 12 + 0)) / 12;
+      const totalYears = Math.max(1, Math.round((rawSpanYears - state.gapYears) * 10) / 10);
+
+      const currentIndex = Math.min(3.0, Math.max(0.6, state.currentSalary / 12577));
+      let histIndex = currentIndex;
+      if (state.histAvgMonthly !== null && state.histAvgMonthly > 0) {
+        histIndex = Math.min(3.0, Math.max(0.6, state.histAvgMonthly / 12577));
+      } else if (state.histMode === 'alwaysMin') {
+        histIndex = 0.6;
+      } else if (state.histMode === 'alwaysMax') {
+        histIndex = 3.0;
+      } else if (state.histMode === 'low') {
+        histIndex = Math.max(0.6, currentIndex * 0.65);
+      } else if (state.histMode === 'high') {
+        histIndex = Math.min(3.0, currentIndex * 1.25);
+      }
+      const g = state.wageGrowth / 100;
+      const r = state.acctRate / 100;
+      const yearsToRetire = Math.max(0, retireYear - 2026);
+      const futureBase = 12577 * Math.pow(1 + g, yearsToRetire);
+
+      // Historical segments (1990 - 2026+)
+      const deemed1992Years = Math.max(0, Math.min(totalYears, 1993 - state.startWorkYear));
+      const years1993To2010 = Math.max(0, Math.min(18, 2011 - Math.max(1993, state.startWorkYear)));
+      const has1993Floor = state.startWorkYear <= 2010 && currentIndex < 1.0;
+
+      // Composite index: 1992 before = 1.0; 1993-2010 = max(1.0, currentIndex); 2011+ = currentIndex
+      let weightedIndexSum = 0;
+      const pastActualYears = Math.max(0, Math.min(totalYears, 2026 - Math.max(1993, state.startWorkYear)));
+      if (state.scheme === 'enterprise') {
+        const y92 = deemed1992Years;
+        const y93_10 = Math.min(Math.max(0, totalYears - y92), years1993To2010);
+        const y2011_2025 = Math.max(0, Math.min(totalYears - y92 - y93_10, pastActualYears - y93_10));
+        const yFuture = Math.max(0, totalYears - y92 - y93_10 - y2011_2025);
+        weightedIndexSum = y92 * 1.0 + y93_10 * Math.max(1.0, histIndex) + y2011_2025 * histIndex + yFuture * currentIndex;
+      } else {
+        // Government: 2014.10 reform
+        const deemed2014Years = Math.max(0, Math.min(totalYears, 2014.75 - state.startWorkYear));
+        const y2015_2025 = Math.max(0, Math.min(totalYears - deemed2014Years, 2026 - Math.max(2015, state.startWorkYear)));
+        const yFuture = Math.max(0, totalYears - deemed2014Years - y2015_2025);
+        weightedIndexSum = deemed2014Years * Math.max(1.0, histIndex * 0.95) + y2015_2025 * histIndex + yFuture * currentIndex;
+      }
+      const avgIndex = totalYears > 0 ? weightedIndexSum / totalYears : currentIndex;
+
+      // Basic Pension
+      const basic = futureBase * ((1 + avgIndex) / 2) * totalYears * 0.01;
+
+      // Personal Account Balance estimation
+      let acctBalance = 0;
+      let personalPrincipal = 0;
+      if (state.customBalance !== null && state.customBalance > 0) {
+        acctBalance = state.customBalance;
+        personalPrincipal = state.customBalance * 0.8;
+        for (let y = 2026; y < retireYear; y++) {
+          const simWage = 12577 * Math.pow(1 + g, y - 2026) * currentIndex;
+          const add = simWage * 12 * 0.08;
+          personalPrincipal += add;
+          acctBalance = (acctBalance + add) * (1 + r);
+        }
+      } else {
+        const actualStart = state.scheme === 'enterprise'
+          ? Math.max(1993, state.startWorkYear)
+          : Math.max(2015, state.startWorkYear);
+        const endYear = Math.max(actualStart, retireYear);
+        for (let y = actualStart; y < endYear; y++) {
+          let baseW = WAGE_BY_YEAR[y] || (12577 * Math.pow(1 + g, Math.max(0, y - 2025)));
+          const baseIdx = y < 2026 ? histIndex : currentIndex;
+          const effIdx = (y <= 2010 && state.scheme === 'enterprise') ? Math.max(1.0, baseIdx) : baseIdx;
+          const annualContrib = baseW * effIdx * 12 * 0.08;
+          personalPrincipal += annualContrib;
+          const histRate = y >= 2016 && y <= 2022 ? 0.065 : r;
+          acctBalance = (acctBalance + annualContrib) * (1 + histRate);
+        }
+      }
+
+      const divisor = getDivisor(retireAgeYears);
+      const personal = acctBalance / divisor;
+
+      // Transitional Pension
+      let transitional = 0;
+      if (state.scheme === 'enterprise' && deemed1992Years > 0) {
+        // 1992年前视同每年1.2% + 1993-1997虚账实记估算总额/120
+        const virtual1993_1997 = deemed1992Years * 1650; // 保守估算折算
+        transitional = futureBase * 0.012 * deemed1992Years + virtual1993_1997 / 120;
+      } else if (state.scheme === 'government') {
+        const deemed2014 = Math.max(0, Math.min(totalYears, 2014.75 - state.startWorkYear));
+        if (deemed2014 > 0) {
+          transitional = futureBase * Math.max(1.0, currentIndex * 0.95) * deemed2014 * 0.012;
+        }
+      }
+
+      // Supplementary: Occupational Annuity (Gov 12% since 2014.10) + Personal Pension
+      let supp = 0;
+      if (state.scheme === 'government') {
+        const annuityYears = Math.max(1, retireYear - Math.max(2015, state.startWorkYear));
+        let annuityBal = 0;
+        for (let i = 0; i < annuityYears; i++) {
+          const w = 12577 * Math.pow(1 + g, Math.max(0, (Math.max(2015, state.startWorkYear) + i) - 2025)) * currentIndex;
+          annuityBal = (annuityBal + w * 12 * 0.12) * (1 + r);
+        }
+        supp += annuityBal / divisor;
+      }
+      if (state.enablePersonalPension) {
+        const ppYears = Math.max(1, retireYear - 2022);
+        let ppBal = 0;
+        for (let i = 0; i < ppYears; i++) {
+          ppBal = (ppBal + 12000) * (1 + r);
+        }
+        supp += ppBal / divisor;
+      }
+
+      const total = basic + personal + transitional + supp;
+      const discountRate = Math.max(0.025, g);
+      const pv = total / Math.pow(1 + discountRate, yearsToRetire);
+      const projSalaryAtRetire = state.currentSalary * Math.pow(1 + g, yearsToRetire);
+      const replacementRate = projSalaryAtRetire > 0 ? (total / projSalaryAtRetire) * 100 : 0;
+
+      return {
+        total, pv, basic, personal, transitional, supp,
+        retireYear, retireMonth, retireAgeYears,
+        minYears, actualYears: totalYears,
+        futureBase, replacementRate,
+        deemedYears: state.scheme === 'enterprise' ? deemed1992Years : Math.max(0, 2014.75 - state.startWorkYear),
+        has1993Floor,
+        accountBalance: acctBalance,
+        personalPrincipal,
+        divisor
+      };
+    }
+
+    // 3. UI Rendering
+    function formatRMB(val) {
+      return Math.round(val).toLocaleString('zh-CN');
+    }
+
+    function render() {
+      const res = calculatePension();
+      const note = document.getElementById('autoWorkNote');
+      if (note && state.scheme !== 'resident') {
+        const gapTxt = state.gapYears > 0 ? `（扣减断缴${state.gapYears}年）` : '';
+        note.textContent = `按${state.startWorkYear}年参保自动算出：退休时预计累计缴费 ${res.actualYears.toFixed(1)} 年${gapTxt}`;
+      }
+      const badge = document.getElementById('autoContribBadge');
+      if (badge) {
+        badge.textContent = `预计累计 ${res.actualYears.toFixed(1)} 年`;
+      }
+
+      document.getElementById('totalMonthly').textContent = formatRMB(res.total);
+      const effDiscPct = Math.max(2.5, state.wageGrowth).toFixed(1);
+      document.getElementById('presentValueNote').innerHTML =
+        `按年均${effDiscPct}%通胀/社平同步折算，相当于今天上海的 <strong class="text-white">${formatRMB(res.pv)} 元/月</strong>`;
+
+      document.getElementById('retireDateText').textContent = `${res.retireYear}年${res.retireMonth}月`;
+      document.getElementById('retireAgeText').textContent = `${res.retireAgeYears.toFixed(1)} 周岁`;
+      document.getElementById('replacementRate').textContent =
+        res.replacementRate !== null ? `${res.replacementRate.toFixed(1)}%` : '居民保障';
+
+      const minYearsEl = document.getElementById('minYearsStatus');
+      const warnEl = document.getElementById('minYearsWarning');
+      if (res.actualYears >= res.minYears) {
+        minYearsEl.textContent = `达标 (需满${res.minYears}年)`;
+        minYearsEl.className = 'text-[11px] text-emerald-300';
+        warnEl.classList.add('hidden');
+      } else {
+        minYearsEl.textContent = `未达标 (需满${res.minYears}年)`;
+        minYearsEl.className = 'text-[11px] text-amber-300';
+        warnEl.classList.remove('hidden');
+        warnEl.textContent = `提示：您退休年份对应的最低缴费年限为 ${res.minYears} 年，目前预计 ${res.actualYears} 年，尚差 ${(res.minYears - res.actualYears).toFixed(1)} 年。`;
+      }
+
+      // Elastic label
+      const eLabel = document.getElementById('elasticLabel');
+      if (state.elasticMonths === 0) eLabel.textContent = '按法定年龄正常退休';
+      else if (state.elasticMonths < 0) eLabel.textContent = `弹性提前 ${Math.abs(state.elasticMonths)} 个月`;
+      else eLabel.textContent = `弹性延迟 ${state.elasticMonths} 个月`;
+
+      // Index badge (plain language)
+      const idx = Math.min(3.0, Math.max(0.6, state.currentSalary / 12577));
+      document.getElementById('indexBadge').textContent = `相当于社平 ${idx.toFixed(2)} 倍`;
+
+      // Policy tags (plain language)
+      const tags = [];
+      if (state.scheme === 'enterprise') {
+        if (state.startWorkYear <= 1992) tags.push({ text: '含1992年前视同工龄补偿', cls: 'bg-purple-50 text-purple-700 border-purple-200' });
+        if (state.has1993Floor) tags.push({ text: '已触发1993–2010低基数托底保护', cls: 'bg-blue-50 text-blue-700 border-blue-200' });
+        tags.push({ text: '个人账户领完后，国家照常发终身', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' });
+      } else if (state.scheme === 'government') {
+        tags.push({ text: '含职业年金补充', cls: 'bg-indigo-50 text-indigo-700 border-indigo-200' });
+        if (state.startWorkYear <= 2014) tags.push({ text: '含2014年前工龄过渡补偿', cls: 'bg-purple-50 text-purple-700 border-purple-200' });
+      }
+      document.getElementById('policyTags').innerHTML = tags.map(t =>
+        `<span class="px-2 py-0.5 rounded-md border ${t.cls}">${t.text}</span>`
+      ).join('');
+
+      document.getElementById('futureBaseDisplay').textContent = `${formatRMB(res.futureBase)} 元/月`;
+
+      // Breakdown list
+      const items = [
+        { label: '基础养老金', val: res.basic, color: 'bg-blue-600', desc: '与社平工资和缴费年限挂钩（统筹部分）' },
+        { label: '个人账户养老金', val: res.personal, color: 'bg-emerald-500', desc: `社保每月扣8%累计约${formatRMB(res.accountBalance)}元 ÷ ${res.divisor || 139}个月（与银行个人养老金无关）` }
+      ];
+      if (res.transitional > 0) {
+        items.push({ label: '过渡性养老金', val: res.transitional, color: 'bg-purple-500', desc: '1992/2014年前视同工龄及虚账实记补偿' });
+      }
+      if (res.supp > 0) {
+        items.push({ label: '职业/个人补充年金', val: res.supp, color: 'bg-amber-500', desc: '职业年金及个人养老金补充' });
+      }
+
+      document.getElementById('breakdownList').innerHTML = items.map(it => `
+        <div class="flex items-start justify-between gap-2">
+          <div class="flex items-start gap-2">
+            <span class="w-2.5 h-2.5 rounded-full ${it.color} mt-1.5 shrink-0"></span>
+            <div>
+              <div class="font-medium text-slate-800">${it.label}</div>
+              <div class="text-[11px] text-slate-500">${it.desc}</div>
+            </div>
+          </div>
+          <div class="font-semibold text-slate-900 whitespace-nowrap">${formatRMB(it.val)} 元</div>
+        </div>
+      `).join('');
+
+      // Deep Analysis Section (Purchasing Power, Percentiles, Payback, Advice)
+      renderDeepAnalysis(res);
+
+      // Update Breakdown Donut Chart
+      const ctx1 = document.getElementById('breakdownChart').getContext('2d');
+      const chartColors = items.map(i => {
+        if (i.color.includes('blue')) return '#2563eb';
+        if (i.color.includes('emerald')) return '#10b981';
+        if (i.color.includes('purple')) return '#8b5cf6';
+        return '#f59e0b';
+      });
+      if (breakdownChart) breakdownChart.destroy();
+      breakdownChart = new Chart(ctx1, {
+        type: 'doughnut',
+        data: {
+          labels: items.map(i => i.label),
+          datasets: [{ data: items.map(i => Math.round(i.val)), backgroundColor: chartColors, borderWidth: 0 }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '66%',
+          plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } }
+          }
+        }
+      });
+
+      // Elastic Comparison Chart (hide for resident)
+      const elasticCard = document.getElementById('elasticChartCard');
+      if (state.scheme === 'resident') {
+        elasticCard.classList.add('hidden');
+      } else {
+        elasticCard.classList.remove('hidden');
+        const early = calculatePension(-36);
+        const normal = calculatePension(0);
+        const late = calculatePension(36);
+
+        const cum80 = (p) => Math.max(0, 80 - p.retireAgeYears) * 12 * p.total;
+        const earlyCum80 = cum80(early);
+        const normalCum80 = cum80(normal);
+        const lateCum80 = cum80(late);
+
+        // Break-even age: when normal catches up with early
+        let breakEvenText = '正常退与提前退收益接近';
+        if (normal.total > early.total && normal.retireAgeYears > early.retireAgeYears) {
+          const headStart = (normal.retireAgeYears - early.retireAgeYears) * 12 * early.total;
+          const monthsToCatch = headStart / (normal.total - early.total);
+          const catchAge = normal.retireAgeYears + monthsToCatch / 12;
+          breakEvenText = `正常退休比提前3年退每月多领 ${formatRMB(normal.total - early.total)} 元，约在 ${catchAge.toFixed(1)} 岁时累计反超`;
+        }
+        document.getElementById('elasticInsight').textContent = breakEvenText;
+
+        document.getElementById('elasticSummaryGrid').innerHTML = [
+          { title: `提前退 (${early.retireAgeYears.toFixed(1)}岁)`, m: early.total, c80: earlyCum80, cls: 'bg-slate-50 border-slate-200' },
+          { title: `法定退 (${normal.retireAgeYears.toFixed(1)}岁)`, m: normal.total, c80: normalCum80, cls: 'bg-blue-50/60 border-blue-200' },
+          { title: `延迟退 (${late.retireAgeYears.toFixed(1)}岁)`, m: late.total, c80: lateCum80, cls: 'bg-emerald-50/60 border-emerald-200' }
+        ].map(x => `
+          <div class="rounded-xl p-2.5 border ${x.cls}">
+            <div class="font-semibold text-slate-700">${x.title}</div>
+            <div class="text-sm font-bold text-slate-900 mt-0.5">${formatRMB(x.m)} <span class="text-[11px] font-normal text-slate-500">元/月</span></div>
+            <div class="text-[11px] text-slate-500 mt-0.5">80岁累计约 ${(x.c80 / 10000).toFixed(1)} 万元</div>
+          </div>
+        `).join('');
+
+        const ctx2 = document.getElementById('elasticChart').getContext('2d');
+        if (elasticChart) elasticChart.destroy();
+        elasticChart = new Chart(ctx2, {
+          type: 'bar',
+          data: {
+            labels: [
+              `提前退 (${early.retireAgeYears.toFixed(1)}岁)`,
+              `法定退 (${normal.retireAgeYears.toFixed(1)}岁)`,
+              `延迟退 (${late.retireAgeYears.toFixed(1)}岁)`
+            ],
+            datasets: [
+              {
+                label: '首月退休金 (元/月)',
+                data: [Math.round(early.total), Math.round(normal.total), Math.round(late.total)],
+                backgroundColor: ['#94a3b8', '#2563eb', '#059669'],
+                borderRadius: 8,
+                barThickness: 36
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+              x: { grid: { display: false } }
+            }
+          }
+        });
+      }
+    }
+
+    // Log-normal CDF approximation for regional pension percentile estimation
+    function estimatePercentile(value, median, sigma) {
+      if (value <= 0) return 1;
+      const z = (Math.log(value) - Math.log(median)) / sigma;
+      // Abramowitz & Stegun normal CDF approximation
+      const t = 1 / (1 + 0.2316419 * Math.abs(z));
+      const d = 0.3989423 * Math.exp(-z * z / 2);
+      let p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+      p = z > 0 ? 1 - p : p;
+      return Math.min(99, Math.max(1, Math.round(p * 100)));
+    }
+
+    function renderDeepAnalysis(res) {
+      const pv = res.pv; // Today's purchasing power (RMB/month)
+      const shConsume = 4756; // 2025 Shanghai urban per-capita monthly expenditure (57076/12)
+      const shIncome = 8070;  // 2025 Shanghai urban per-capita monthly disposable income (96842/12)
+
+      // 1. Consumption & Lifestyle
+      const consumePct = Math.round((pv / shConsume) * 100);
+      const incomePct = Math.round((pv / shIncome) * 100);
+      document.getElementById('consumeCoverRatio').textContent = `${consumePct}%`;
+      document.getElementById('incomeCoverRatio').textContent = `${incomePct}%`;
+
+      let tierLabel = '基础保障型';
+      let tierCls = 'bg-amber-50 text-amber-700 border-amber-200';
+      let checks = [];
+      if (pv < 3500) {
+        tierLabel = '基础温饱型（建议补充储蓄）';
+        tierCls = 'bg-amber-50 text-amber-700 border-amber-200';
+        checks = [
+          { ok: true,  t: '日常买菜做饭、水电煤、基础公交出行（约2,000–2,500元/月）' },
+          { ok: false, t: '覆盖上海城镇人均日常消费（4,756元/月）仍有缺口，需搭配家庭储蓄' },
+          { ok: false, t: '商业医疗自费、年度长途旅游或居家照护费用较紧张' }
+        ];
+      } else if (pv < 6500) {
+        tierLabel = '小康安稳型';
+        tierCls = 'bg-blue-50 text-blue-700 border-blue-200';
+        checks = [
+          { ok: true,  t: '轻松覆盖上海单人日常饮食、物业水电与社区生活（约3,500元/月）' },
+          { ok: true,  t: '每年可安排 1–2 次长三角周边游及常规体检自费项目' },
+          { ok: false, t: '若未来需长期请全职护工或住中高端养老社区（8,000+元/月），仍需额外储备' }
+        ];
+      } else if (pv < 11000) {
+        tierLabel = '体面宽裕型';
+        tierCls = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+        checks = [
+          { ok: true,  t: `远超上海人均消费水平，覆盖基本开支后每月仍结余约 ${formatRMB(pv - shConsume)} 元（按今日购买力）` },
+          { ok: true,  t: '可兼顾优质商保/沪惠保、自费体检与每年 2–3 次国内/出境旅行' },
+          { ok: true,  t: '高龄阶段具备请钟点工或部分补贴养老院费用的经济底气' }
+        ];
+      } else {
+        tierLabel = '高品质宽裕型';
+        tierCls = 'bg-indigo-50 text-indigo-700 border-indigo-200';
+        checks = [
+          { ok: true,  t: `相当于上海城镇人均可支配收入的 ${(pv / shIncome).toFixed(1)} 倍，生活非常从容` },
+          { ok: true,  t: '高质量饮食、慢病进口药自费、高频旅行与兴趣消费均可轻松负担' },
+          { ok: true,  t: '即便步入高龄，也可覆盖专业居家照护或上海中高端养老社区月费' }
+        ];
+      }
+      const badgeEl = document.getElementById('lifestyleBadge');
+      badgeEl.textContent = tierLabel;
+      badgeEl.className = `text-xs font-semibold px-2.5 py-1 rounded-full border ${tierCls}`;
+
+      document.getElementById('lifestyleChecklist').innerHTML = checks.map(c => `
+        <div class="flex items-start gap-2">
+          <span class="${c.ok ? 'text-emerald-600' : 'text-amber-500'} font-bold mt-0.5">${c.ok ? '✓' : '△'}</span>
+          <span>${c.t}</span>
+        </div>
+      `).join('');
+
+      // 2. Regional Percentiles (Shanghai, YRD, National)
+      const regions = [
+        { name: '上海地区（城镇退休）', pct: estimatePercentile(pv, 5100, 0.42), avg: '约 5,500 元', barColor: 'bg-blue-600' },
+        { name: '江浙沪 / 长三角地区', pct: estimatePercentile(pv, 4000, 0.44), avg: '约 4,300 元', barColor: 'bg-indigo-500' },
+        { name: '全国范围（城镇职工）', pct: estimatePercentile(pv, 3100, 0.46), avg: '约 3,320 元', barColor: 'bg-emerald-500' }
+      ];
+      document.getElementById('percentileBars').innerHTML = regions.map(rg => `
+        <div>
+          <div class="flex items-center justify-between text-xs mb-1">
+            <span class="font-medium text-slate-700">${rg.name} <span class="text-slate-400 font-normal">（参考均值${rg.avg}）</span></span>
+            <span class="font-bold text-slate-900">超过约 ${rg.pct}% 人群</span>
+          </div>
+          <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+            <div class="h-full ${rg.barColor} rounded-full transition-all duration-300" style="width: ${rg.pct}%"></div>
+          </div>
+        </div>
+      `).join('');
+
+      // 3. Payback & Longevity Cumulative Payout
+      const personalPrincipal = res.personalPrincipal || (res.accountBalance * 0.72);
+      const paybackYears = res.total > 0 ? (personalPrincipal / (res.total * 12)) : 0;
+      const acctDepleteAge = res.retireAgeYears + (res.divisor || 139) / 12;
+
+      document.getElementById('paybackBadge').textContent = `约 ${paybackYears.toFixed(1)} 年领回个人本金`;
+      document.getElementById('paybackSummary').innerHTML =
+        `按当前测算，退休后只需领取约 <strong>${paybackYears.toFixed(1)} 年</strong>（即 <strong>${(res.retireAgeYears + paybackYears).toFixed(1)} 岁</strong>），就能把你工作期间个人缴纳的养老本金全部领回；个人账户余额大约在 <strong>${acctDepleteAge.toFixed(1)} 岁</strong> 领完，之后依然按原标准（含每年上调）由国家统筹基金<strong>终身照常发放</strong>。`;
+
+      const targetAges = [75, 80, 85, 90];
+      const discR = Math.max(0.025, state.wageGrowth / 100);
+      const yrsToRet = Math.max(0, res.retireYear - 2026);
+      document.getElementById('longevityGrid').innerHTML = targetAges.map(age => {
+        const yrs = Math.max(0, Math.round(age - res.retireAgeYears));
+        let cumNominal = 0;
+        let cumReal = 0;
+        for (let i = 0; i < yrs; i++) {
+          const yrPay = res.total * 12 * Math.pow(1.02, i);
+          cumNominal += yrPay;
+          cumReal += yrPay / Math.pow(1 + discR, yrsToRet + i);
+        }
+        return `
+          <div class="bg-slate-50 rounded-xl p-2.5 border border-slate-100">
+            <div class="text-[11px] text-slate-500">活到 ${age} 岁</div>
+            <div class="text-sm font-bold text-slate-900 mt-0.5">${(cumReal / 10000).toFixed(0)}万</div>
+            <div class="text-[10px] text-slate-400">今日值 (名义${(cumNominal / 10000).toFixed(0)}万)</div>
+          </div>
+        `;
+      }).join('');
+
+      // 4. Gap Diagnosis & Actionable Advice
+      const targetRate = 70; // 70% replacement rate benchmark
+      const rep = res.replacementRate;
+      const gapBadge = document.getElementById('gapBadge');
+      const gapBox = document.getElementById('gapDiagnosisBox');
+      const advices = [];
+
+      if (state.scheme === 'resident') {
+        gapBadge.textContent = '居民基础保障';
+        gapBadge.className = 'text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200';
+        gapBox.innerHTML = `上海城乡居保基础养老金（1,555元/月）居全国前列，但与上海月均消费（4,756元）相比仍有约 <strong>${formatRMB(Math.max(0, shConsume - pv))} 元/月</strong> 的资金缺口。`;
+        advices.push('若尚未退休且具备缴费能力，可考虑在当地转为灵活就业职工社保，或将居保缴费档次调至最高档并尽量满15年以上。');
+        advices.push('建议配合稳健理财、存款或商业养老年金，补齐每月日常与医疗自费开销。');
+      } else if (rep >= targetRate) {
+        gapBadge.textContent = '替代率健康 · 达标';
+        gapBadge.className = 'text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200';
+        gapBox.innerHTML = `你的养老金替代率为 <strong>${rep.toFixed(1)}%</strong>，达到国际通行的“退休生活质量不明显下降”参考线（70%）。依靠基本养老金已能较好维持退休前消费习惯。`;
+        advices.push('医保同样关键：记得确保上海职工医保累计缴满15年（含视同），退休后即可享受终身医保待遇，大幅降低老年医疗支出风险。');
+        if (!state.enablePersonalPension) {
+          advices.push('若你当前个税边际税率在 10% 及以上，可考虑每年存 12,000 元「个人养老金」抵税，退休后每月可再多领一笔补充养老金。');
+        }
+        advices.push('建议每年 7 月社保基数调整后，在「随申办」核对一次公司是否按实申报，避免长期低基数拉低基础养老金。');
+      } else {
+        const monthlyGapToday = Math.max(100, state.currentSalary * ((targetRate - rep) / 100));
+        const yrsLeft = Math.max(1, res.retireYear - 2026);
+        // Monthly savings needed at 3.5% real return to build a 20-year payout corpus
+        const targetCorpus = monthlyGapToday * 12 * 18;
+        const rM = 0.035 / 12;
+        const nM = yrsLeft * 12;
+        const monthlySave = targetCorpus * rM / (Math.pow(1 + rM, nM) - 1);
+
+        gapBadge.textContent = `替代率偏低 (${rep.toFixed(1)}%)`;
+        gapBadge.className = 'text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200';
+        gapBox.innerHTML = `你的养老金替代率为 <strong>${rep.toFixed(1)}%</strong>，距离“维持退休前生活品质”的 70% 参考线，按今日购买力测算每月约有 <strong>${formatRMB(monthlyGapToday)} 元</strong> 缺口。`;
+        advices.push(`<strong>自建养老储备参考：</strong>距离退休还有 ${yrsLeft} 年，若从现在起每月定投约 <strong>${formatRMB(monthlySave)} 元</strong>（按年化3.5%稳健复利估算），退休时有望基本补齐上述缺口。`);
+        if (state.currentSalary <= 8000) {
+          advices.push('<strong>尽量拉长缴费年限：</strong>按最低基数缴费时，基础养老金的“多缴一年多1%”杠杆最高，切忌缴满最低年限就停缴。');
+        } else {
+          advices.push('<strong>巧用个人养老金抵税：</strong>可在银行开立个人养老金账户（每年最高1.2万），既享当下个税抵扣，又能为高薪群体弥补社保基数封顶带来的替代率下降。');
+        }
+        advices.push('<strong>关注弹性退休窗口：</strong>结合上方早退/晚退对比，如果身体健康且岗位稳定，适当延迟1–3年退休可同时拉高缴费年限并缩短计发月数。');
+      }
+
+      document.getElementById('adviceList').innerHTML = advices.map((a, idx) => `
+        <div class="flex items-start gap-2">
+          <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold shrink-0 mt-0.5">${idx + 1}</span>
+          <span class="leading-relaxed">${a}</span>
+        </div>
+      `).join('');
+    }
+
+    // Populate Wage Table
+    function renderWageTable() {
+      const tbody = document.getElementById('wageTableBody');
+      tbody.innerHTML = SHANGHAI_WAGES.map(w => `
+        <tr class="hover:bg-slate-50">
+          <td class="py-2 px-3 font-medium text-slate-800">${w.year}年</td>
+          <td class="py-2 px-3 text-right font-semibold text-blue-700">${w.monthly.toLocaleString('zh-CN')} 元</td>
+          <td class="py-2 px-3 text-right text-slate-500">${w.note}</td>
+        </tr>
+      `).join('');
+    }
+
+    // Scheme toggle UI helper
+    function setSchemeUI(scheme) {
+      state.scheme = scheme;
+      document.querySelectorAll('.scheme-btn').forEach(btn => {
+        if (btn.dataset.scheme === scheme) {
+          btn.classList.remove('scheme-inactive');
+          btn.classList.add('scheme-active');
+        } else {
+          btn.classList.remove('scheme-active');
+          btn.classList.add('scheme-inactive');
+        }
+      });
+
+      const isRes = scheme === 'resident';
+      document.getElementById('workerInputs').classList.toggle('hidden', isRes);
+      document.getElementById('roleWrap').classList.toggle('hidden', isRes);
+      document.getElementById('elasticWrap').classList.toggle('hidden', isRes);
+      document.getElementById('residentInputs').classList.toggle('hidden', !isRes);
+      render();
+    }
+
+    // Event Listeners
+    document.getElementById('tabBtnCalc').addEventListener('click', () => {
+      document.getElementById('viewCalc').classList.remove('hidden');
+      document.getElementById('viewPolicy').classList.add('hidden');
+      document.getElementById('tabBtnCalc').className = 'px-4 py-2 text-sm font-medium rounded-lg transition tab-active';
+      document.getElementById('tabBtnPolicy').className = 'px-4 py-2 text-sm font-medium rounded-lg transition tab-inactive';
+    });
+
+    document.getElementById('tabBtnPolicy').addEventListener('click', () => {
+      document.getElementById('viewPolicy').classList.remove('hidden');
+      document.getElementById('viewCalc').classList.add('hidden');
+      document.getElementById('tabBtnPolicy').className = 'px-4 py-2 text-sm font-medium rounded-lg transition tab-active';
+      document.getElementById('tabBtnCalc').className = 'px-4 py-2 text-sm font-medium rounded-lg transition tab-inactive';
+    });
+
+    document.querySelectorAll('.scheme-btn').forEach(btn => {
+      btn.addEventListener('click', () => setSchemeUI(btn.dataset.scheme));
+    });
+
+    document.getElementById('toggleGuideBtn').addEventListener('click', () => {
+      const box = document.getElementById('guideBox');
+      const arrow = document.getElementById('guideArrow');
+      const hidden = box.classList.toggle('hidden');
+      arrow.textContent = hidden ? '展开 ▾' : '收起 ▴';
+    });
+
+    document.getElementById('toggleAdvancedBtn').addEventListener('click', () => {
+      const box = document.getElementById('advancedBox');
+      const btn = document.getElementById('toggleAdvancedBtn');
+      const hidden = box.classList.toggle('hidden');
+      btn.textContent = hidden ? '展开微调 ▾' : '收起微调 ▴';
+    });
+
+    function syncAutoWorkYears() {
+      if (state.autoStartWork) {
+        state.startWorkYear = Math.min(2026, Math.max(1975, state.birthYear + 22));
+        document.getElementById('startWorkYear').value = state.startWorkYear;
+      }
+    }
+
+    function highlightTierBtn(activeTier) {
+      state.tier = activeTier;
+      document.querySelectorAll('.tier-btn').forEach(btn => {
+        btn.className = btn.dataset.tier === activeTier
+          ? 'tier-btn px-2.5 py-1 rounded-lg border text-[11px] font-medium transition scheme-active'
+          : 'tier-btn px-2.5 py-1 rounded-lg border text-[11px] font-medium transition scheme-inactive';
+      });
+    }
+
+    function setTier(tier) {
+      if (tier === 'min') state.currentSalary = 7546;
+      else if (tier === 'avg') state.currentSalary = 12577;
+      else if (tier === 'max') state.currentSalary = 37731;
+      document.getElementById('currentSalary').value = Math.round(state.currentSalary);
+      highlightTierBtn(tier);
+      render();
+    }
+
+    function setHistMode(mode) {
+      state.histMode = mode;
+      document.querySelectorAll('.hist-btn').forEach(btn => {
+        btn.className = btn.dataset.hist === mode
+          ? 'hist-btn py-1.5 px-2 rounded-lg border text-xs transition scheme-active'
+          : 'hist-btn py-1.5 px-2 rounded-lg border text-xs transition scheme-inactive';
+      });
+      render();
+    }
+
+    function updateResUnitUI() {
+      const isMo = state.resUnitMode === 'month';
+      const yBtn = document.getElementById('resUnitYearBtn');
+      const mBtn = document.getElementById('resUnitMonthBtn');
+      yBtn.className = isMo ? 'px-2.5 py-1 rounded-md font-medium text-slate-600 hover:text-slate-900 transition' : 'px-2.5 py-1 rounded-md font-medium bg-white text-blue-700 shadow-sm transition';
+      mBtn.className = isMo ? 'px-2.5 py-1 rounded-md font-medium bg-white text-blue-700 shadow-sm transition' : 'px-2.5 py-1 rounded-md font-medium text-slate-600 hover:text-slate-900 transition';
+      document.getElementById('resPayLabel').textContent = isMo ? '月均个人缴费+补贴（元/月）' : '年均个人缴费+补贴（元/年）';
+      document.getElementById('resAnnualPay').value = isMo ? Math.round(state.resAnnualPay / 12) : Math.round(state.resAnnualPay);
+    }
+
+    // Inputs binding
+    function bindInput(id, key, isFloat = false) {
+      document.getElementById(id).addEventListener('input', e => {
+        const val = isFloat ? parseFloat(e.target.value) : parseInt(e.target.value, 10);
+        if (!isNaN(val)) {
+          state[key] = val;
+          render();
+        }
+      });
+    }
+
+
+    document.getElementById('resUnitYearBtn').addEventListener('click', () => {
+      state.resUnitMode = 'year';
+      updateResUnitUI();
+    });
+    document.getElementById('resUnitMonthBtn').addEventListener('click', () => {
+      state.resUnitMode = 'month';
+      updateResUnitUI();
+    });
+
+    document.getElementById('birthYear').addEventListener('input', e => {
+      const val = parseInt(e.target.value, 10);
+      if (!isNaN(val) && val >= 1940 && val <= 2010) {
+        state.birthYear = val;
+        syncAutoWorkYears();
+        render();
+      }
+    });
+    document.getElementById('birthMonth').addEventListener('change', e => {
+      state.birthMonth = parseInt(e.target.value, 10) || 6;
+      syncAutoWorkYears();
+      render();
+    });
+    document.getElementById('genderRole').addEventListener('change', e => {
+      state.genderRole = e.target.value;
+      syncAutoWorkYears();
+      render();
+    });
+    bindInput('elasticMonths', 'elasticMonths');
+    document.getElementById('startWorkYear').addEventListener('input', e => {
+      const val = parseInt(e.target.value, 10);
+      if (!isNaN(val) && val >= 1960 && val <= 2026) {
+        state.autoStartWork = false;
+        state.startWorkYear = val;
+        render();
+      }
+    });
+    document.getElementById('gapYears').addEventListener('input', e => {
+      const val = parseFloat(e.target.value);
+      state.gapYears = isNaN(val) || val < 0 ? 0 : val;
+      render();
+    });
+    bindInput('resYears', 'resYears');
+    document.getElementById('resAnnualPay').addEventListener('input', e => {
+      const val = parseFloat(e.target.value);
+      if (!isNaN(val) && val >= 0) {
+        state.resAnnualPay = state.resUnitMode === 'month' ? val * 12 : val;
+        render();
+      }
+    });
+    bindInput('wageGrowth', 'wageGrowth', true);
+    bindInput('acctRate', 'acctRate', true);
+
+    document.querySelectorAll('.tier-btn').forEach(btn => {
+      btn.addEventListener('click', () => setTier(btn.dataset.tier));
+    });
+    document.querySelectorAll('.hist-btn').forEach(btn => {
+      btn.addEventListener('click', () => setHistMode(btn.dataset.hist));
+    });
+
+    document.getElementById('currentSalary').addEventListener('input', e => {
+      const val = parseFloat(e.target.value);
+      if (!isNaN(val) && val > 0) {
+        state.currentSalary = val;
+        if (Math.abs(val - 7546) < 10) highlightTierBtn('min');
+        else if (Math.abs(val - 12577) < 10) highlightTierBtn('avg');
+        else if (Math.abs(val - 37731) < 10) highlightTierBtn('max');
+        else highlightTierBtn('custom');
+        render();
+      }
+    });
+
+    document.getElementById('histAvgInput').addEventListener('input', e => {
+      const val = parseFloat(e.target.value);
+      state.histAvgMonthly = isNaN(val) || val <= 0 ? null : val;
+      render();
+    });
+
+    document.getElementById('customBalance').addEventListener('input', e => {
+      const val = parseFloat(e.target.value);
+      state.customBalance = isNaN(val) || val <= 0 ? null : val;
+      render();
+    });
+
+    document.getElementById('enablePersonalPension').addEventListener('change', e => {
+      state.enablePersonalPension = e.target.checked;
+      render();
+    });
+
+    // Presets
+    const PRESETS = {
+      zhongren90: { scheme: 'enterprise', birthYear: 1968, birthMonth: 5, genderRole: 'male', startWorkYear: 1990, gapYears: 0, currentSalary: 11000, elasticMonths: 0 },
+      post80: { scheme: 'enterprise', birthYear: 1985, birthMonth: 6, genderRole: 'male', startWorkYear: 2008, gapYears: 0, currentSalary: 18000, elasticMonths: 0 },
+      post95: { scheme: 'enterprise', birthYear: 1998, birthMonth: 9, genderRole: 'female55', startWorkYear: 2021, gapYears: 0, currentSalary: 14000, elasticMonths: 0 },
+      gov: { scheme: 'government', birthYear: 1980, birthMonth: 3, genderRole: 'male', startWorkYear: 2003, gapYears: 0, currentSalary: 16000, elasticMonths: 0 },
+      resident: { scheme: 'resident', birthYear: 1975, birthMonth: 8, resYears: 20, resAnnualPay: 3500 }
+    };
+
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const p = PRESETS[btn.dataset.preset];
+        Object.assign(state, p);
+        state.autoStartWork = false;
+        state.gapYears = p.gapYears || 0;
+        state.histAvgMonthly = null;
+        state.customBalance = null;
+        document.getElementById('histAvgInput').value = '';
+        document.getElementById('customBalance').value = '';
+        document.getElementById('gapYears').value = state.gapYears;
+        document.getElementById('birthYear').value = state.birthYear;
+        document.getElementById('birthMonth').value = state.birthMonth;
+        if (p.genderRole) document.getElementById('genderRole').value = state.genderRole;
+        if (p.startWorkYear) document.getElementById('startWorkYear').value = state.startWorkYear;
+        if (p.currentSalary) {
+          document.getElementById('currentSalary').value = state.currentSalary;
+          highlightTierBtn('custom');
+        }
+        if (p.elasticMonths !== undefined) document.getElementById('elasticMonths').value = state.elasticMonths;
+        if (p.resYears) document.getElementById('resYears').value = state.resYears;
+        if (p.resAnnualPay) document.getElementById('resAnnualPay').value = state.resAnnualPay;
+        setSchemeUI(p.scheme);
+      });
+    });
+
+    // Init
+    syncAutoWorkYears();
+    renderWageTable();
+    render();
+    syncLatestPolicy();
+  </script>
+</body>
+</html>

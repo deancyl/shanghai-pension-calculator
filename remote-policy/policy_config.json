@@ -1,0 +1,17 @@
+{
+  "version": "2026.08",
+  "updatedAt": "2026-08-18",
+  "baseYear": 2026,
+  "pensionBase": 12577,
+  "minBase": 7546,
+  "maxBase": 37731,
+  "residentBasic": 1555,
+  "sourceNote": "上海市人社局 沪人社规〔2026〕16号 及 2026年度社保缴费基数上下限公告",
+  "extraWages": [
+    {
+      "year": 2025,
+      "monthly": 12577,
+      "note": "全口径社平 (2026计发基数)"
+    }
+  ]
+}
