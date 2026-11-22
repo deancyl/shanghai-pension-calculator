@@ -123,6 +123,18 @@ function runSuite() {
     assert(resAfter.basic >= 1800, 'Resident basic pension must be at least 1800');
   });
 
+  // Test 6: Government scheme deemed years must never exceed total actual years
+  it('Government deemedYears must not exceed actualYears when gaps exist', () => {
+    const ctx = createContext();
+    vm.runInContext('state.scheme = "government"', ctx);
+    vm.runInContext('state.birthYear = 1970', ctx);
+    vm.runInContext('state.startWorkYear = 1990', ctx);
+    vm.runInContext('state.gapYears = 20', ctx);
+    const res = vm.runInContext('calculatePension()', ctx);
+    assert(res.actualYears > 0, 'actualYears must be > 0');
+    assert(res.deemedYears <= res.actualYears, `deemedYears (${res.deemedYears}) must not exceed actualYears (${res.actualYears})`);
+  });
+
   // Summary
   let failed = 0;
   console.log('=== Test Suite Results ===');

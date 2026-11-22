@@ -787,6 +787,7 @@
 
       // Historical segments (1990 - 2026+)
       const deemed1992Years = Math.max(0, Math.min(totalYears, 1993 - state.startWorkYear));
+      const deemed2014Years = Math.max(0, Math.min(totalYears, 2014.75 - state.startWorkYear));
       const years1993To2010 = Math.max(0, Math.min(18, 2011 - Math.max(1993, state.startWorkYear)));
       const has1993Floor = state.startWorkYear <= 2010 && currentIndex < 1.0;
 
@@ -801,7 +802,6 @@
         weightedIndexSum = y92 * 1.0 + y93_10 * Math.max(1.0, histIndex) + y2011_2025 * histIndex + yFuture * currentIndex;
       } else {
         // Government: 2014.10 reform
-        const deemed2014Years = Math.max(0, Math.min(totalYears, 2014.75 - state.startWorkYear));
         const y2015_2025 = Math.max(0, Math.min(totalYears - deemed2014Years, 2026 - Math.max(2015, state.startWorkYear)));
         const yFuture = Math.max(0, totalYears - deemed2014Years - y2015_2025);
         weightedIndexSum = deemed2014Years * Math.max(1.0, histIndex * 0.95) + y2015_2025 * histIndex + yFuture * currentIndex;
@@ -849,9 +849,8 @@
         const virtual1993_1997 = deemed1992Years * 1650; // 保守估算折算
         transitional = futureBase * 0.012 * deemed1992Years + virtual1993_1997 / 120;
       } else if (state.scheme === 'government') {
-        const deemed2014 = Math.max(0, Math.min(totalYears, 2014.75 - state.startWorkYear));
-        if (deemed2014 > 0) {
-          transitional = futureBase * Math.max(1.0, currentIndex * 0.95) * deemed2014 * 0.012;
+        if (deemed2014Years > 0) {
+          transitional = futureBase * Math.max(1.0, currentIndex * 0.95) * deemed2014Years * 0.012;
         }
       }
 
@@ -886,7 +885,7 @@
         retireYear, retireMonth, retireAgeYears,
         minYears, actualYears: totalYears,
         futureBase, replacementRate,
-        deemedYears: state.scheme === 'enterprise' ? deemed1992Years : Math.max(0, 2014.75 - state.startWorkYear),
+        deemedYears: state.scheme === 'enterprise' ? deemed1992Years : deemed2014Years,
         has1993Floor,
         accountBalance: acctBalance,
         personalPrincipal,
