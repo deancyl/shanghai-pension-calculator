@@ -10,12 +10,12 @@
 ## 1. 已完成
 - **第 1 轮** | `app/src/main/assets/index.html:736,749,770,786,821,832,864,944` | 消除测算与展示中硬编码的 12577 与 1555 常量，绑定至 `ACTIVE_BASE_WAGE` 与 `ACTIVE_RESIDENT_BASIC` 使政策热更新完全生效 | 验证退出码: 0
 - **第 2 轮** | `app/src/main/assets/index.html:804,852,888` | 提升机关事业单位视同工龄变量作用域并约束上限为 `totalYears`，修复断缴时 `deemedYears > actualYears` 边界缺陷 | 验证退出码: 0
+- **第 3 轮** | `app/src/main/assets/index.html:585,1219,1342,1446` | 将缴费档位快速选择、输入高亮联动与居保诊断提示中的硬编码常量替换为动态政策基数，增加档位按钮文字动态同步 | 验证退出码: 0
 
 ---
 
 ## 2. 待办池
-1. **[P2]** `app/src/main/assets/index.html:1338-1340,1441-1443` - 缴费档位切换与输入联动高亮硬编码旧版基数（7546/12577/37731），政策更新后档位快捷按钮未联动最新基数。
-   - 触发证据：代码静态核验可见 `setTier` 与 input 事件监听器中直接比对和赋值数字常量，未引用 `ACTIVE_MIN_BASE` / `ACTIVE_BASE_WAGE` / `ACTIVE_MAX_BASE`。
+（暂无待办，所有已知缺陷已全数闭环修复并验证）
 
 ---
 

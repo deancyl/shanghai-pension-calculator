@@ -582,6 +582,13 @@
         });
         renderWageTable();
       }
+      if (typeof document !== 'undefined' && document.querySelectorAll) {
+        document.querySelectorAll('.tier-btn').forEach(btn => {
+          if (btn.dataset.tier === 'min') btn.textContent = `最低 ${formatRMB(ACTIVE_MIN_BASE)}`;
+          else if (btn.dataset.tier === 'avg') btn.textContent = `社平 ${formatRMB(ACTIVE_BASE_WAGE)}`;
+          else if (btn.dataset.tier === 'max') btn.textContent = `顶格 ${formatRMB(ACTIVE_MAX_BASE)}`;
+        });
+      }
       render();
     }
 
@@ -1210,7 +1217,7 @@
       if (state.scheme === 'resident') {
         gapBadge.textContent = '居民基础保障';
         gapBadge.className = 'text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200';
-        gapBox.innerHTML = `上海城乡居保基础养老金（1,555元/月）居全国前列，但与上海月均消费（4,756元）相比仍有约 <strong>${formatRMB(Math.max(0, shConsume - pv))} 元/月</strong> 的资金缺口。`;
+        gapBox.innerHTML = `上海城乡居保基础养老金（${formatRMB(ACTIVE_RESIDENT_BASIC)}元/月）居全国前列，但与上海月均消费（4,756元）相比仍有约 <strong>${formatRMB(Math.max(0, shConsume - pv))} 元/月</strong> 的资金缺口。`;
         advices.push('若尚未退休且具备缴费能力，可考虑在当地转为灵活就业职工社保，或将居保缴费档次调至最高档并尽量满15年以上。');
         advices.push('建议配合稳健理财、存款或商业养老年金，补齐每月日常与医疗自费开销。');
       } else if (rep >= targetRate) {
@@ -1334,9 +1341,9 @@
     }
 
     function setTier(tier) {
-      if (tier === 'min') state.currentSalary = 7546;
-      else if (tier === 'avg') state.currentSalary = 12577;
-      else if (tier === 'max') state.currentSalary = 37731;
+      if (tier === 'min') state.currentSalary = ACTIVE_MIN_BASE;
+      else if (tier === 'avg') state.currentSalary = ACTIVE_BASE_WAGE;
+      else if (tier === 'max') state.currentSalary = ACTIVE_MAX_BASE;
       document.getElementById('currentSalary').value = Math.round(state.currentSalary);
       highlightTierBtn(tier);
       render();
@@ -1437,9 +1444,9 @@
       const val = parseFloat(e.target.value);
       if (!isNaN(val) && val > 0) {
         state.currentSalary = val;
-        if (Math.abs(val - 7546) < 10) highlightTierBtn('min');
-        else if (Math.abs(val - 12577) < 10) highlightTierBtn('avg');
-        else if (Math.abs(val - 37731) < 10) highlightTierBtn('max');
+        if (Math.abs(val - ACTIVE_MIN_BASE) < 10) highlightTierBtn('min');
+        else if (Math.abs(val - ACTIVE_BASE_WAGE) < 10) highlightTierBtn('avg');
+        else if (Math.abs(val - ACTIVE_MAX_BASE) < 10) highlightTierBtn('max');
         else highlightTierBtn('custom');
         render();
       }

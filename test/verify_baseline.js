@@ -135,6 +135,23 @@ function runSuite() {
     assert(res.deemedYears <= res.actualYears, `deemedYears (${res.deemedYears}) must not exceed actualYears (${res.actualYears})`);
   });
 
+  // Test 7: setTier and salary tier matching must use dynamic active policy variables
+  it('setTier and tier matching dynamic active base variables on policy update', () => {
+    const ctx = createContext();
+    vm.runInContext('applyPolicyConfig({ minBase: 8000, pensionBase: 14000, maxBase: 42000 })', ctx);
+    vm.runInContext('setTier("min")', ctx);
+    const salaryMin = vm.runInContext('state.currentSalary', ctx);
+    assert.strictEqual(salaryMin, 8000, 'setTier("min") must set currentSalary to 8000');
+
+    vm.runInContext('setTier("avg")', ctx);
+    const salaryAvg = vm.runInContext('state.currentSalary', ctx);
+    assert.strictEqual(salaryAvg, 14000, 'setTier("avg") must set currentSalary to 14000');
+
+    vm.runInContext('setTier("max")', ctx);
+    const salaryMax = vm.runInContext('state.currentSalary', ctx);
+    assert.strictEqual(salaryMax, 42000, 'setTier("max") must set currentSalary to 42000');
+  });
+
   // Summary
   let failed = 0;
   console.log('=== Test Suite Results ===');
